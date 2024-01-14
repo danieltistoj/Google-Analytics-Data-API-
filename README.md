@@ -29,3 +29,18 @@ The program queries the Google Analytics Data API for active user data, filtered
 Feel free to tailor the code to align with your specific reporting requirements.
 
 ---
+## Important Note
+
+The Google Analytics Reporting API v4 does not support Google Analytics 4 properties and will throw a 403 error for GA4 properties. As a result, this sample utilizes the [Google Analytics Data API](https://developers.google.com/analytics/devguides/reporting/data/v1) to access the new reporting features specifically designed for GA4 properties.
+
+For more information, refer to the [official documentation](https://developers.google.com/analytics/devguides/reporting/core/v4):
+
+Ensure that you have included the following dependency in your project:
+
+```xml
+<dependency>
+    <groupId>com.google.analytics</groupId>
+    <artifactId>google-analytics-data</artifactId>
+    <version>0.43.0</version>
+</dependency>
+```
