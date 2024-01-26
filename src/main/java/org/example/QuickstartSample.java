@@ -32,7 +32,7 @@ public class QuickstartSample {
          * TODO(developer): Replace this variable with your Google Analytics 4 property ID before
          * running the sample.
          */
-        String propertyId = "YOUR-GA4-PROPERTY-ID";
+        String propertyId = "423306242";
         sampleRunReport(propertyId);
     }
 
@@ -44,6 +44,7 @@ public class QuickstartSample {
 
         InputStream fileInputStream = new FileInputStream(KEY_FILE_LOCATION);
         GoogleCredentials credential = GoogleCredentials.fromStream(fileInputStream);
+        System.out.println("access token: "+credential.getAccessToken());
         BetaAnalyticsDataSettings betaAnalyticsDataSettings = BetaAnalyticsDataSettings
                 .newHttpJsonBuilder()
                 .setCredentialsProvider(FixedCredentialsProvider.create(credential))
@@ -60,7 +61,13 @@ public class QuickstartSample {
         RunReportRequest request =
                 RunReportRequest.newBuilder()
                         .setProperty("properties/" + propertyId)
-                        .addDimensions(Dimension.newBuilder().setName("city"))
+                        .addDimensions(Dimension.newBuilder().setName("country"))
+                        .addDimensions(Dimension.newBuilder().setName("platform"))
+                        .addDimensions(Dimension.newBuilder().setName("browser"))
+                        .addDimensions(Dimension.newBuilder().setName("operatingSystem"))
+                        //.addDimensions(Dimension.newBuilder().setName("region"))
+                        //.addDimensions(Dimension.newBuilder().setName("city"))
+                        //.addDimensions(Dimension.newBuilder().setName("platform"))
                         .addMetrics(Metric.newBuilder().setName("activeUsers"))
                         //.addMetrics(Metric.newBuilder().setName("totalRevenue"))
                         .addDateRanges(DateRange.newBuilder().setStartDate("7daysAgo").setEndDate("today"))
@@ -68,21 +75,42 @@ public class QuickstartSample {
 
         // Make the request.
         RunReportResponse response = analyticsData.runReport(request);
+        printRunResponseResponse(response);
 
-        // Iterate through every row of the API response.
-        // Verifica si la lista de filas está vacía
-        if (response.getRowsList().isEmpty()) {
-            System.out.println("No data available.");
-        } else {
-            System.out.println("Report result:");
-            // Itera a través de cada fila de la respuesta
-            for (Row row : response.getRowsList()) {
-                System.out.printf(
-                        "%s, %s%n", row.getDimensionValues(0).getValue(), row.getMetricValues(0).getValue());
-            }
-        }
 
     }
+    // Prints results of a runReport call.
+    static void printRunResponseResponse(RunReportResponse response) {
+        System.out.printf("%s rows received%n", response.getRowsList().size());
+
+        for (DimensionHeader header : response.getDimensionHeadersList()) {
+            System.out.printf("Dimension header name: %s%n", header.getName());
+        }
+
+        for (MetricHeader header : response.getMetricHeadersList()) {
+            System.out.printf("Metric header name: %s (%s)%n", header.getName(), header.getType());
+        }
+
+        System.out.println("dimenesion: "+response.getDimensionHeadersCount());
+        int dimension = response.getDimensionHeadersCount();
+        System.out.println("metric: "+response.getMetricHeadersCount());
+        int metric = response.getMetricHeadersCount();
+        int count = 0;
+        System.out.println("Report result:");
+        for (Row row : response.getRowsList()) {
+            System.out.println("row: "+(count+1));
+            System.out.printf(
+                    "%s, %s%n", row.getDimensionValues(0).getValue(), row.getMetricValues(0).getValue());
+            System.out.printf(
+                    "%s, %s%n", row.getDimensionValues(1).getValue(), row.getMetricValues(0).getValue());
+            System.out.printf(
+                    "%s, %s%n", row.getDimensionValues(2).getValue(), row.getMetricValues(0).getValue());
+            System.out.printf(
+                    "%s, %s%n", row.getDimensionValues(3).getValue(), row.getMetricValues(0).getValue());
+            count++;
+        }
+    }
+
 
 
 }
