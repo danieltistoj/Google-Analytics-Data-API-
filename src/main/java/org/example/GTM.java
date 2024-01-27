@@ -4,11 +4,15 @@ package org.example;
  * Access and manage a Google Tag Manager account.
  */
 
+import com.google.analytics.admin.v1beta.AnalyticsAdminServiceSettings;
+import com.google.analytics.admin.v1beta.ConversionEvent;
+import com.google.analytics.admin.v1beta.CreateConversionEventRequest;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.services.tagmanager.TagManager;
 import com.google.api.services.tagmanager.TagManagerScopes;
 import com.google.api.services.tagmanager.model.Condition;
@@ -16,6 +20,7 @@ import com.google.api.services.tagmanager.model.Parameter;
 import com.google.api.services.tagmanager.model.Tag;
 import com.google.api.services.tagmanager.model.Trigger;
 import com.google.analytics.admin.v1beta.AnalyticsAdminServiceClient;
+import com.google.auth.oauth2.GoogleCredentials;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -31,8 +36,10 @@ public class GTM {
     private static final String APPLICATION_NAME = "HelloWorld";
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
-    private static final String accountId = "xxxxxxxx";
-    private static final String containerId = "xxxxxxx";
+    private static final String accountId = "xxxx2952";
+    private static final String containerId = "xxxxx3917";
+
+    private static final String  propertyId = "xxxxx242";
     private static NetHttpTransport httpTransport;
 
     public static void main(String[] args) {
@@ -45,19 +52,40 @@ public class GTM {
             TagManager manager = new TagManager.Builder(httpTransport, JSON_FACTORY, credential)
                     .setApplicationName(APPLICATION_NAME).build();
 
-
            Trigger trigger = createTrigger("whatsapp-mario-lopez","linkClick","/doctores/mario-lopez" ,manager);
            List<String> firingTriggerId = new ArrayList<>();
            firingTriggerId.add(trigger.getTriggerId());
-           System.out.println(trigger.getTriggerId());
+           System.out.println("trigger id: "+trigger.getTriggerId());
 
            Tag tag = createTag("whatsapp_mario_lopez","whatsapp_mario_lopez","gaawe",firingTriggerId, manager);
             System.out.println("tag id: "+tag.getTagId());
             System.out.println("tag name: "+tag.getName());
 
+            AnalyticsAdminServiceClient analyticsAdminServiceClient = createAnalyticsAdmin();
+
+            ConversionEvent conversionEvent = createConversionEvent(analyticsAdminServiceClient, tag.getName(), tag.getName());
+            System.out.println("event name: " + conversionEvent.getName());
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static ConversionEvent createConversionEvent(AnalyticsAdminServiceClient analyticsAdmin, String name, String eventName){
+        ConversionEvent conversionEvent = ConversionEvent.newBuilder()
+                .setName(name)
+                .setEventName(eventName)
+                .build();
+
+        // Construye el objeto CreateConversionEventRequest
+        CreateConversionEventRequest request = CreateConversionEventRequest.newBuilder()
+                .setParent(String.format("properties/%s", propertyId))
+                .setConversionEvent(conversionEvent)
+                .build();
+
+        // Llama al método de la API para crear la conversión de evento
+        ConversionEvent createdEvent = analyticsAdmin.createConversionEvent(request);
+        return createdEvent;
     }
 
     private static  Trigger createTrigger(String name, String type, String pagePath, TagManager service) throws IOException {
@@ -156,6 +184,23 @@ public class GTM {
                 .execute();
 
         return ua;
+    }
+
+    private static AnalyticsAdminServiceClient createAnalyticsAdmin() throws IOException {
+        InputStream fileInputStream = new FileInputStream(CLIENT_SECRET_JSON_RESOURCE);
+        GoogleCredentials credential = GoogleCredentials.fromStream(fileInputStream);
+
+        AnalyticsAdminServiceSettings analyticsAdminServiceSettings = AnalyticsAdminServiceSettings
+                .newHttpJsonBuilder()
+                .setCredentialsProvider(FixedCredentialsProvider.create(credential)).build();
+
+        AnalyticsAdminServiceClient analyticsAdminServiceClient = null;
+        try {
+            analyticsAdminServiceClient = AnalyticsAdminServiceClient.create(analyticsAdminServiceSettings);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return analyticsAdminServiceClient;
     }
 
 
